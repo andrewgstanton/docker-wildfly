@@ -1,49 +1,31 @@
-FROM openjdk:8
+# Use latest jboss/base-jdk:8 image as the base
+FROM jboss/base-jdk:8
 
-MAINTAINER Ralph Soika <ralph.soika@imixs.com>
+# Set the WILDFLY_VERSION env variable
+ENV WILDFLY_VERSION 10.1.0.Final
+ENV JBOSS_HOME /opt/jboss/wildfly
 
 USER root
 
-# Create the 'imixs' user and group used to launch processes
-# The uid and gid will be set to 901 to avoid conflicts with offical users on the docker host.
-RUN groupadd -r wildfly -g 901 && \
-    useradd -u 901 -r -g wildfly -m -d /home/wildfly -s /sbin/nologin -c "wildfly user" wildfly && \
-    chmod 755 /opt     
-
-# Set the working directory
-WORKDIR /opt
-
-# set environments 
-ENV WILDFLY_VERSION 10.0.1.Final
-ENV WILDFLY_HOME=/opt/wildfly
-ENV WILDFLY_DEPLOYMENT=$WILDFLY_HOME/standalone/deployments
-ENV WILDFLY_CONFIG=$WILDFLY_HOME/standalone/configuration
-ENV DEBUG=false
-
-
 # Add the WildFly distribution to /opt, and make wildfly the owner of the extracted tar content
 # Make sure the distribution is available from a well-known place
-RUN curl http://download.jboss.org/wildfly/$WILDFLY_VERSION/wildfly-$WILDFLY_VERSION.tar.gz | tar zx \
- && ln -s $WILDFLY_HOME-$WILDFLY_VERSION/ $WILDFLY_HOME  
-	
-# Add the Wildfly start script 
-ADD wildfly_start.sh $WILDFLY_HOME/
-ADD wildfly_add_admin_user.sh $WILDFLY_HOME/       
-RUN chmod +x $WILDFLY_HOME/wildfly_add_admin_user.sh $WILDFLY_HOME/wildfly_start.sh
+RUN cd $HOME \
+    && curl -O https://download.jboss.org/wildfly/$WILDFLY_VERSION/wildfly-$WILDFLY_VERSION.tar.gz \
+    && tar xf wildfly-$WILDFLY_VERSION.tar.gz \
+    && mv $HOME/wildfly-$WILDFLY_VERSION $JBOSS_HOME \
+    && rm wildfly-$WILDFLY_VERSION.tar.gz \
+    && chown -R jboss:0 ${JBOSS_HOME} \
+    && chmod -R g+rw ${JBOSS_HOME}
 
-# add eclipsliknk configuration 
-COPY modules/ $WILDFLY_HOME/modules/
+# Ensure signals are forwarded to the JVM process correctly for graceful shutdown
+ENV LAUNCH_JBOSS_IN_BACKGROUND true
 
-# change owner of /opt/wildfly
-RUN chown -R wildfly:wildfly $WILDFLY_HOME/
-
-VOLUME /home/wildfly
-
-# Set home directory
-WORKDIR /home/wildfly
-USER wildfly
+USER jboss
 
 # Expose the ports we're interested in
-EXPOSE 8080 9990
+EXPOSE 8080 9990 8787
 
-CMD ["/opt/wildfly/wildfly_start.sh"]
+# Set the default command to run on boot
+# This will boot WildFly in the standalone mode and bind to all interface
+CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0"]
+
