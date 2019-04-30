@@ -57,10 +57,13 @@ RUN mkdir -p /tmp/src/monitor-enterprise
 # COPY standalone.xml /tmp/config/standalone.xml
 
 # clone the github repo use the username and password passed during build
-ARG gitUser
-ARG gitPassword
+# ARG gitUser
+# ARG gitPassword
 
-RUN git clone -b docker https://${gitUser}:${gitPassword}@github.com/RevereHQ/monitor-enterprise /tmp/src/monitor-enterprise
+# RUN git clone -b docker https://${gitUser}:${gitPassword}@github.com/RevereHQ/monitor-enterprise /tmp/src/monitor-enterprise
+
+RUN git clone -b docker git@github.com:RevereHQ/monitor-enterprise.git /tmp/src/monitor-enterprise
+
 
 RUN cd $HOME \ 
     && chown -R jboss:0 /tmp/config \
