@@ -23,9 +23,24 @@ ENV LAUNCH_JBOSS_IN_BACKGROUND true
 USER jboss
 
 # Expose the ports we're interested in
-EXPOSE 8080 9990 8787
+EXPOSE 8080 9990 8787 5432
+
+# create tmp area for loading in config settings for wildfly and postgres db connection
+
+# copy the standalone.xml and add data source  to the $HOME/tmp/config directory
+# standalone is the current standalone.xml configuration we want to use for this environment
+
+# add data source will add the postgres driver to wildfly
+
+RUN mkdir -p /tmp
+RUN mkdir -p /tmp/config
+
+COPY standalone.xml /tmp/config
+COPY add-datasource.sh /tmp/config
+COPY *.jar /tmp/config
 
 # Set the default command to run on boot
 # This will boot WildFly in the standalone mode and bind to all interface
+
 CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0"]
 
