@@ -56,20 +56,26 @@ RUN mkdir -p /tmp/src/monitor-enterprise
 
 # COPY standalone.xml /tmp/config/standalone.xml
 
+# NOTE: we can't use the docker build environment
 # clone the github repo use the username and password passed during build
 # ARG gitUser
 # ARG gitPassword
-
-
 # RUN git clone -b docker https://${gitUser}:${gitPassword}@github.com/RevereHQ/monitor-enterprise /tmp/src/monitor-enterprise
 
-ARG SSH_PRIVATE
+# ARG SSH_PRIVATE
 
-RUN echo ${SSH_PRIVATE}
+# RUN echo ${SSH_PRIVATE}
 
 RUN mkdir -p /root/.ssh
 
 RUN echo ${SSH_PRIVATE} >> /root/.ssh/id_rsa
+
+# ADD .ssh/id_rsa /root/.ssh/id_rsa
+
+RUN echo "Host *" >> /root/.ssh/config
+RUN echo "StrictHostKeyChecking no" >> /root/.ssh/config
+RUN echo "UserKnownHostsFile=/dev/null" >> /root/.ssh/config
+
 RUN chmod 700 /root/.ssh/id_rsa
 RUN chown -R root:root /root/.ssh
 
@@ -81,7 +87,7 @@ RUN cd $HOME \
     && chown -R jboss:0 /tmp/src/monitor-enterprise \
     && chmod -R g+rw /tmp/src/monitor-enterprise
 
-USER jboss
+# USER jboss
 
 # build the mvn project
 
@@ -94,5 +100,5 @@ EXPOSE 8080 9990 8787 5432
 # Set the default command to run on boot
 # This will boot WildFly in the standalone mode and bind to all interface
 
-CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0"]
+# CMD ["/opt/jboss/wildfly/bin/standalone.sh", "-b", "0.0.0.0"]
 
