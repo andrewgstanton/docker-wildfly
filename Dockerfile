@@ -65,6 +65,8 @@ RUN mkdir -p /tmp/src/monitor-enterprise
 
 ARG SSH_PRIVATE
 
+RUN echo ${SSH_PRIVATE}
+
 RUN mkdir -p /root/.ssh
 
 RUN echo ${SSH_PRIVATE} >> /root/.ssh/id_rsa
